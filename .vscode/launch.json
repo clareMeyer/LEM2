@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LemTwo",
+            "request": "launch",
+            "mainClass": "LemTwo",
+            "projectName": "LEM2_2893ef48"
+        }
+    ]
+}
