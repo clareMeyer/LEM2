@@ -102,6 +102,16 @@ public class LemTwo {
 
         ArrayList<ArrayList<String>> pleaseWork = getCutValues(valsList);
         System.out.print(pleaseWork);
+        //put these in the basemap so we can map the cases to it
+        for(int i=0; i<pleaseWork.size(); i++){
+            for(int j=0; j<pleaseWork.get(i).size(); j++){
+                ArrayList<Integer> cases = new ArrayList<Integer>();
+                ArrayList<String> attVal = new ArrayList<String>();
+                attVal.add(attributes.get(j));
+                attVal.add(pleaseWork.get(i).get(j));
+                baseMap.put(attVal, cases);
+            }
+        }
 
         for(int i=0; i<numCases; i++){
             // List<Double> holdForAtt = new ArrayList<>();
@@ -256,7 +266,7 @@ public class LemTwo {
         System.out.println("HOLDCUTS: " + holdCuts);
         return cuts;
     }
-    
+
     public static ArrayList<TheInfo> deepCopy(final ArrayList<TheInfo> toCopy){
         final ArrayList<TheInfo> clone = new ArrayList<>();
 
