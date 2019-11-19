@@ -15,6 +15,11 @@ public class TheInfo {
 
     }
 
+    public boolean equals(Object obj){
+        return(this.m_att.equals(((TheInfo) obj).m_att) &&
+                this.m_val.equals(((TheInfo) obj).m_val));
+    }
+
     TheInfo(String attribute, String value, ArrayList<Integer> cases) {
         m_att = attribute;
         m_val = value;
@@ -33,12 +38,25 @@ public class TheInfo {
         return m_att;
     }
 
+    public void setAtt(String attribute) {
+        m_att = attribute;
+    }
+
     public String getVal() {
         return m_val;
     }
 
+    public void setVal(String value) {
+        m_val = value;
+    }
+
     public ArrayList<Integer> getCases() {
         return m_cases;
+    }
+
+    public void setCases(ArrayList<Integer> cases){
+        m_cases = cases;
+        numCases = m_cases.size();
     }
 
     public int getNumCases() {
