@@ -69,20 +69,15 @@ public class LemTwo {
         count += numAttributes;
         decisionName = contentArr[count];
 
-        // System.out.println("Num attributes: " + numAttributes);
-        // System.out.println("attributes: " + attributes);
-        // System.out.println("decisionName: " + decisionName);
-
         count += 1;
-        // System.out.println("count: " + count + " " + contentArr[count]);
 
         count++;
         contentArr = Arrays.copyOfRange(contentArr, count, contentArr.length);
 
-
         final Map<String, String> types = new HashMap<>();
         for(int i=0; i<numAttributes; i++){
-            if(contentArr[count].matches("[+-]?\\d*(\\.\\d+)?")){
+            if(contentArr[i].matches("[+-]?\\d*(\\.\\d+)?")){
+                System.out.println("isNumber: " + contentArr[i]);
                 types.put(attributes.get(i), "number");
                 numNumAttributes ++;
             } else {
@@ -94,96 +89,114 @@ public class LemTwo {
         final int numCases = contentArr.length/(numAttributes+1);
         List<List<Double>> valsList = new ArrayList<List<Double>>();
 
-        // System.out.print(numCases);
+/////////////FOR CUTS/////////////////
+        //compile and sort all the values for each attribute that is numeric
+        //vasList is a list that holds a list of sorted values for each numeric attribute
+        if(numNumAttributes !=0){
+          for(int i=0; i<numAttributes; i++){
+              List<Double> holdForAtt = new ArrayList<>();
+              for(int j=0; j<numCases; j++){
+                  final int real = i + (j * (numAttributes + 1));
+                  if (types.get(attributes.get(i)) == "number") {
+                      if(!holdForAtt.contains(Double.valueOf(contentArr[real]))){
+                          holdForAtt.add(Double.valueOf(contentArr[real]));
+                      }
+                  }
+              }
+              Collections.sort(holdForAtt);
+              valsList.add(holdForAtt);
+          }
 
-        for(int i=0; i<numAttributes; i++){
-            List<Double> holdForAtt = new ArrayList<>();
-            for(int j=0; j<numCases; j++){
-                final int real = i + (j * (numAttributes + 1));
-                if (types.get(attributes.get(i)) == "number") {
-                    if(!holdForAtt.contains(Double.valueOf(contentArr[real]))){
-                        holdForAtt.add(Double.valueOf(contentArr[real]));
-                    }
-                }
-            }
-            Collections.sort(holdForAtt);
-            valsList.add(holdForAtt);
-        }
+          //get the cut values for each attribute
+          // pleasework holds a list of cut values for each attribute
+          ArrayList<ArrayList<String>> pleaseWork = getCutValues(valsList);
 
-        ArrayList<ArrayList<String>> pleaseWork = getCutValues(valsList);
+          //get a list of just the cut values not the ranges for each attribute
+          List<List<Double>> cuts = getJustCuts(valsList);
 
-        Map<ArrayList<String>, ArrayList<Integer>> attValList = new HashMap<>();
-        for(int i=0; i<pleaseWork.size(); i++){
-            for(int j=0; j<pleaseWork.get(i).size(); j++){
-                ArrayList<String> hold = new ArrayList<String>();
-                ArrayList<Integer> hold2 = new ArrayList<Integer>();
-                hold.add(attributes.get(i));
-                hold.add(pleaseWork.get(i).get(j));
+          //all is a list that has a list for each attribute
+            //each attribute list has lists of cases for each interval
+          ArrayList<ArrayList<ArrayList<Integer>>> all = new ArrayList<ArrayList<ArrayList<Integer>>>();
+          //for each numerical attribute
+          for(int i=0; i<numNumAttributes; i++){
+              //get the number of cuts for this attribute
+              int numCuts = pleaseWork.get(i).size();
 
-                attValList.put(hold, hold2);
-            }
-        }
+              //holdIt is a list of cases for each interval for this one attribute
+              //this is initialized with 0s because I need values I can change
+              ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
+              for(int e=0; e<numCuts; e++){
+                  ArrayList<Integer> a = new ArrayList<Integer>();
+                  a.add(0);
+                  holdIt.add(a);
+              }
 
+              //for the number of cases, going down the line for this attribute
+              for(int j=0; j<numCases; j++){
+                  //real will allow us to get the original value of the case
+                  int real = i + (j * (numAttributes + 1));
+                  //for each cut want to go through and if its less you add it to that case
+                  for(int c=0; c<numCuts/2; c++){
+                      if(Double.valueOf(contentArr[real]) <= cuts.get(i).get(c)){
+                          ArrayList<Integer> hold = new ArrayList<>();
+                          hold = holdIt.get(c * 2);
+                          hold.add(j+1);
+                          holdIt.set(c * 2, hold);
+                      }
+                  }
+              }
 
-        List<List<Double>> cuts = getJustCuts(valsList);
-        // System.out.println("PLEASE WORK: " + pleaseWork);
+              //fill in the odd cases because they are every case that wasnt in the privious one
+              for(int h=1; h<numCuts; h=h+2){
+                  ArrayList<Integer> holdAgain = new ArrayList<>();
+                  ArrayList<Integer> allNums = new ArrayList<>();
+                  for(int p=1; p<=numCases; p++){
+                      allNums.add(p);
+                  }
 
-        ArrayList<ArrayList<ArrayList<Integer>>> all = new ArrayList<ArrayList<ArrayList<Integer>>>();
-        for(int i=0; i<numNumAttributes; i++){
-            int numCuts = pleaseWork.get(i).size();
+                  holdAgain = holdIt.get(h-1);
+                  //remove the placeholder 0
+                  holdAgain.remove(0);
 
+                  allNums.removeAll(holdAgain);
 
-            ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
-            for(int e=0; e<numCuts; e++){
-                ArrayList<Integer> a = new ArrayList<Integer>();
-                a.add(0);
-                holdIt.add(a);
-            }
+                  holdIt.set(h, allNums);
+              }
+              //add this to all
+              all.add(holdIt);
+          }
+          //at this point all holds
+          //[[[caseCut1], [caseCut3], ..., [lastCaseCut]],[interval2], ... , [lastinter]]
 
-            for(int j=0; j<numCases; j++){
-                int real = i + (j * (numAttributes + 1));
-                for(int c=0; c<numCuts/2; c++){
-                    if(Double.valueOf(contentArr[real]) <= cuts.get(i).get(c)){
-                        ArrayList<Integer> hold = new ArrayList<>();
-                        hold = holdIt.get(c * 2);
-                        hold.add(j+1);
-                        holdIt.set(c * 2, hold);
-                    }
-                }
-            }
+          //create a map of <[attribute, value], cases> where each value is now the new range
+          // at this point the cases are empty
+          // Map<ArrayList<String>, ArrayList<Integer>> attValList = new HashMap<>();
+          for(int i=0; i<pleaseWork.size(); i++){
+              for(int j=0; j<pleaseWork.get(i).size(); j++){
+                  ArrayList<String> atVal = new ArrayList<String>();
+                  ArrayList<Integer> cases = new ArrayList<Integer>();
+                  atVal.add(attributes.get(i));
+                  atVal.add(pleaseWork.get(i).get(j));
 
-            for(int h=1; h<numCuts; h=h+2){
-                ArrayList<Integer> holdAgain = new ArrayList<>();
-                ArrayList<Integer> allNums = new ArrayList<>();
-                for(int p=1; p<=numCases; p++){
-                    allNums.add(p);
-                }
+                  cases = all.get(i).get(j);
+                  baseMap.put(atVal, cases);
 
-                holdAgain = holdIt.get(h-1);
-                holdAgain.remove(0);
+                  // baseMap.put(hold, hold2);
+              }
+          }
 
-                allNums.removeAll(holdAgain);
-
-                // System.out.println("H: " + h);
-                holdIt.set(h, allNums);
-            }
-            all.add(holdIt);
-        }
-
-
-
-
-        //put these in the basemap so we can map the cases to it
-        for(int i=0; i<pleaseWork.size(); i++){
-            for(int j=0; j<pleaseWork.get(i).size(); j++){
-                ArrayList<Integer> cases = new ArrayList<Integer>();
-                ArrayList<String> attVal = new ArrayList<String>();
-                attVal.add(attributes.get(i));
-                attVal.add(pleaseWork.get(i).get(j));
-
-                cases = all.get(i).get(j);
-                baseMap.put(attVal, cases);
-            }
+          //put these in the basemap so we can map the cases to it
+          // for(int i=0; i<pleaseWork.size(); i++){
+          //     for(int j=0; j<pleaseWork.get(i).size(); j++){
+          //         ArrayList<Integer> cases = new ArrayList<Integer>();
+          //         ArrayList<String> attVal = new ArrayList<String>();
+          //         attVal.add(attributes.get(i));
+          //         attVal.add(pleaseWork.get(i).get(j));
+          //
+          //         cases = all.get(i).get(j);
+          //         baseMap.put(attVal, cases);
+          //     }
+          // }
         }
 
         for(int i=0; i<numCases; i++){
@@ -237,8 +250,8 @@ public class LemTwo {
         ////////////////////////////////////////////////////////////////
         ////////////////////PRINTING TO OUTPUT FILE////////////////////
         ///////////////////////////////////////////////////////////////
-        PrintStream out = new PrintStream(new File(outputFileName));
-        System.setOut(out);
+        // PrintStream out = new PrintStream(new File(outputFileName));
+        // System.setOut(out);
 
             answer.forEach((ruleSet) -> {
               ArrayList<Integer> holdNums = getThreeNums(ruleSet);
@@ -259,7 +272,7 @@ public class LemTwo {
             });
             System.out.print("\n");
 
-        out.close();
+        // out.close();
         ////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////
