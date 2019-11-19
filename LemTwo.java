@@ -1,4 +1,5 @@
 import java.util.*;
+import java.lang.*;
 
 import java.io.*;
 import java.nio.file.*;
@@ -26,18 +27,18 @@ public class LemTwo {
     static ArrayList<ArrayList<Integer>> ruleCases = new ArrayList<ArrayList<Integer>>();
     static ArrayList<Integer> casesCovered = new ArrayList<Integer>();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(final String[] args) throws IOException {
 
-        Scanner getInfo = new Scanner(System.in);
+        final Scanner getInfo = new Scanner(System.in);
         System.out.print("Enter file name: ");
-        String fileName = getInfo.nextLine();
+        final String fileName = getInfo.nextLine();
         System.out.println("The fileName: " + fileName);
         getInfo.close();
 
         int numAttributes = 0;
-        String delim = "[\\n\\t ]";
+        final String delim = "[\\n\\t ]";
 
-        String content = Files.readString(Paths.get(fileName));
+        final String content = Files.readString(Paths.get(fileName));
         content.replaceAll("!.*?!", "");
 
         String contentArr[] = content.split(delim);
@@ -64,48 +65,138 @@ public class LemTwo {
         count++;
         contentArr = Arrays.copyOfRange(contentArr, count, contentArr.length);
 
-        int numCases = contentArr.length/(numAttributes+1);
-        System.out.print(numCases);
-        for(int i=0; i<numCases; i++){
-            for(int j=0; j<numAttributes; j++){
-                int real = j + (i*(numAttributes+1));
-                ArrayList<String> hold = new ArrayList<>();
-                hold.add(attributes.get(j));
-                hold.add(contentArr[real]);
 
-                // add [attribute, value], {case numbers} to the map
-                if (baseMap.containsKey(hold)) {
-                    ArrayList<Integer> hold2 = baseMap.get(hold);
-                    hold2.add(i+1);
-                    baseMap.put(hold, hold2);
-                } else {
-                    ArrayList<Integer> hold2 = new ArrayList<>();
-                    hold2.add(i+1);
-                    baseMap.put(hold, hold2);
+        final Map<String, ArrayList<Double>> attValList = new HashMap<>();
+        final int holdCount = count;
+        final Map<String, String> types = new HashMap<>();
+        for(int i=0; i<numAttributes; i++){
+            if(contentArr[count].matches("[+-]?\\d*(\\.\\d+)?")){
+                types.put(attributes.get(i), "number");
+            } else {
+                types.put(attributes.get(i), "string");
+            }
+            count++;
+        }
+
+        final int numCases = contentArr.length/(numAttributes+1);
+        // double[][] vals = new double[numAttributes][numCases];
+        List<List<Double>> valsList = new ArrayList<List<Double>>();
+        // ArrayList<ArrayList<String>> vals2 = new ArrayList<ArrayList<String>>();
+
+        System.out.print(numCases);
+
+        for(int i=0; i<numAttributes; i++){
+            List<Double> holdForAtt = new ArrayList<>();
+            for(int j=0; j<numCases; j++){
+                final int real = i + (j * (numAttributes + 1));
+                if (types.get(attributes.get(i)) == "number") {
+                    // vals[j][i] = Double.valueOf(contentArr[real]);
+                    if(!holdForAtt.contains(Double.valueOf(contentArr[real]))){
+                        holdForAtt.add(Double.valueOf(contentArr[real]));
+                    }
                 }
             }
-            int dec = (i*(numAttributes+1)) + numAttributes;
+            Collections.sort(holdForAtt);
+            valsList.add(holdForAtt);
+        }
+
+        ArrayList<ArrayList<String>> pleaseWork = getCutValues(valsList);
+        System.out.print(pleaseWork);
+
+        for(int i=0; i<numCases; i++){
+            // List<Double> holdForAtt = new ArrayList<>();
+            for(int j=0; j<numAttributes; j++){
+                final int real = j + (i*(numAttributes+1));
+                // if(types.get(attributes.get(j)) == "number"){
+                //     // vals[j][i] = Double.valueOf(contentArr[real]);
+                //     holdForAtt.add(Double.valueOf(contentArr[real]));
+                // }
+                // else {
+                if(types.get(attributes.get(j)) == "string"){
+                    ArrayList<String> hold = new ArrayList<>();
+                    hold.add(attributes.get(j));
+                    hold.add(contentArr[real]);
+
+                    // vals2.add(hold);
+                    if (baseMap.containsKey(hold)) {
+                        final ArrayList<Integer> hold2 = baseMap.get(hold);
+                        hold2.add(i + 1);
+                        baseMap.put(hold, hold2);
+                    } else {
+                        final ArrayList<Integer> hold2 = new ArrayList<>();
+                        hold2.add(i + 1);
+                        baseMap.put(hold, hold2);
+                    }
+                }
+
+                
+
+                // add [attribute, value], {case numbers} to the map
+                // if (baseMap.containsKey(hold)) {
+                //     final ArrayList<Integer> hold2 = baseMap.get(hold);
+                //     hold2.add(i+1);
+                //     baseMap.put(hold, hold2);
+                // } else {
+                //     final ArrayList<Integer> hold2 = new ArrayList<>();
+                //     hold2.add(i+1);
+                //     baseMap.put(hold, hold2);
+                // }
+            }
+            // valsList.add(holdForAtt);
+            final int dec = (i*(numAttributes+1)) + numAttributes;
             // add decision, {case numbers} to that map
             if (decisions.containsKey(contentArr[dec])) {
-                ArrayList<Integer> holdCases = decisions.get(contentArr[dec]);
+                final ArrayList<Integer> holdCases = decisions.get(contentArr[dec]);
                 holdCases.add(i+1);
                 decisions.put(contentArr[dec], holdCases);
             } else {
-                ArrayList<Integer> holdCases = new ArrayList<>();
+                final ArrayList<Integer> holdCases = new ArrayList<>();
                 holdCases.add(i+1);
                 decisions.put(contentArr[dec], holdCases);
             }
         }
+
+        System.out.println("valsList: " + valsList);
 
         baseMap.forEach((attributeVal, cases) -> {
             theList.add(new TheInfo(attributeVal.get(0), attributeVal.get(1), cases));
         });
 
         Collections.sort(theList, new Comparator<TheInfo>() {
-            public int compare(TheInfo o1, TheInfo o2) {
+            public int compare(final TheInfo o1, final TheInfo o2) {
                 return o1.getAtt().compareToIgnoreCase(o2.getAtt());
             }
         });
+
+        // for(int i=0; i<numAttributes; i++){
+        //     for(int j=0; j<numCases; j++){
+        //         Arrays.sort(vals[i]);
+        //         System.out.println(vals[i][j]);
+        //     }
+        //     System.out.print("\n");
+        // }
+        // theList.forEach((obj) -> {
+        // for(int i=0; i<theList.size(); i++){
+        //     final TheInfo obj = theList.get(i);
+        //     final String hold1 = obj.getAtt();
+        //     if(types.get(obj.getAtt()) == "number"){
+        //         if(attValList.containsKey(hold1)){
+        //             final ArrayList<Double> hold = attValList.get(obj.getAtt());
+        //             System.out.println("WOrking " + Double.valueOf(obj.getVal()));
+        //             Double please = Double.valueOf((obj.getVal()));
+        //             hold.add(please);
+        //             attValList.put(hold1, hold);
+        //         } else {
+        //             ArrayList<Double> hold = attValList.get(obj.getAtt());
+        //             attValList.put(hold1, hold);
+        //         }
+        //     }
+        // }
+        // });
+
+        System.out.println("NUMERICAL LIST: " + attValList);
+
+
 
         decisions.forEach((attributeVal, cases) -> {
             decisionsList.add(new TheInfo("decision", attributeVal, cases));
@@ -117,7 +208,7 @@ public class LemTwo {
         }
 
  
-        ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
+        final ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
             answer.forEach((ruleSet) -> {
                 System.out.println("Rule: " + overlappingCases(getSetCases(ruleSet)) + ":") ;
                 System.out.println("*******************************");
@@ -127,8 +218,47 @@ public class LemTwo {
             });
             System.out.print("\n");
     }
-    public static ArrayList<TheInfo> deepCopy(ArrayList<TheInfo> toCopy){
-        ArrayList<TheInfo> clone = new ArrayList<>();
+
+    public static ArrayList<ArrayList<String>> getCutValues(List<List<Double>> lists){
+        ArrayList<ArrayList<String>> cuts = new ArrayList<ArrayList<String>>();
+        List<List<Double>> holdCuts = new ArrayList<List<Double>>();
+        for(int i=0; i<lists.size(); i++){
+            // for(int j=0; j<lists.get(i).size(); i++){
+
+                
+                
+                for(int k=0; k<lists.get(i).size()-1; k++){
+                    List<Double> holdIt = new ArrayList<>();
+                    for(int p=k+1; p<lists.get(i).size(); p++){
+                        Double num1 = lists.get(i).get(k);
+                        Double num2 = lists.get(i).get(p);
+
+                        Double cut = (num1 + num2)/2;
+                        holdIt.add(cut);
+                        k = k+1;
+                    }
+                    holdCuts.add(holdIt);
+                }
+        }
+
+        for(int i=0; i<holdCuts.size(); i++){
+            Double num1 = lists.get(i).get(0);
+            ArrayList<String> forAtt = new ArrayList<>();
+            for(int j=0; j<holdCuts.get(i).size(); j++){
+                String sCut1 = (Double.toString(num1) + ".." + Double.toString(holdCuts.get(i).get(j)));
+                String sCut2 = (Double.toString(holdCuts.get(i).get(j))) + ".." + Double.toString(lists.get(i).get(lists.get(i).size()-1));
+
+                forAtt.add(sCut1);
+                forAtt.add(sCut2);
+            }
+            cuts.add(forAtt);
+        }
+        System.out.println("HOLDCUTS: " + holdCuts);
+        return cuts;
+    }
+    
+    public static ArrayList<TheInfo> deepCopy(final ArrayList<TheInfo> toCopy){
+        final ArrayList<TheInfo> clone = new ArrayList<>();
 
        for(int i=0; i<toCopy.size(); i++){
             clone.add((TheInfo)toCopy.get(i).clone());
@@ -139,12 +269,12 @@ public class LemTwo {
 
     public static ArrayList<ArrayList<TheInfo>> getRuleSet(){
         //MAP OF DECISIONS NEEDS TO BE LIST INSTEAD OF THEINFO
-        ArrayList<ArrayList<TheInfo>> allRules = new ArrayList<ArrayList<TheInfo>>();
+        final ArrayList<ArrayList<TheInfo>> allRules = new ArrayList<ArrayList<TheInfo>>();
         //for each decision 
         for(int d=0; d<decisionsList.size(); d++){
             decisionsList.get(d).print();
-            ArrayList<Integer> dCases = decisionsList.get(d).getCases();
-            ArrayList<Integer> holdRule = new ArrayList<>();
+            final ArrayList<Integer> dCases = decisionsList.get(d).getCases();
+            final ArrayList<Integer> holdRule = new ArrayList<>();
             ArrayList<Integer> tempCases = new ArrayList<>();
             for(int i=0; i<dCases.size(); i++){
                 holdRule.add(dCases.get(i));
@@ -156,7 +286,7 @@ public class LemTwo {
                 holdList.add(theList.get(i));
             }
      
-            ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
+            final ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
 
             while(tempCases.size()!=0){
                 ArrayList<TheInfo> aRule = getOneRule(tempCases, holdRule, holdList, holdARule);
@@ -168,8 +298,8 @@ public class LemTwo {
 
                 allRules.add(new ArrayList<TheInfo>(aRule));
 
-                ArrayList<ArrayList<Integer>> holdSet = getSetCases(aRule);
-                ArrayList<Integer> covered = overlappingCases(holdSet);
+                final ArrayList<ArrayList<Integer>> holdSet = getSetCases(aRule);
+                final ArrayList<Integer> covered = overlappingCases(holdSet);
                 tempCases = getNewGoal(tempCases, covered, false);
                 holdList = new ArrayList<TheInfo>();
                 for (int i = 0; i < theList.size(); i++) {
@@ -186,10 +316,10 @@ public class LemTwo {
     }
 
     //goal, the rule, the condition youre trying to drop
-    public static ArrayList<TheInfo> checkForDrop(ArrayList<Integer> goal, ArrayList<TheInfo> oneRule, int condNum){
+    public static ArrayList<TheInfo> checkForDrop(final ArrayList<Integer> goal, final ArrayList<TheInfo> oneRule, int condNum){
         if(oneRule.size() == 1) return oneRule;
         for(int i=0; i<oneRule.size(); i++){
-            TheInfo holdCond = oneRule.get(condNum);
+            final TheInfo holdCond = oneRule.get(condNum);
             oneRule.remove(condNum);
             if(isContained(goal, overlappingCases(getSetCases(oneRule)))){
                 return (checkForDrop(goal, oneRule, 0));
@@ -201,16 +331,16 @@ public class LemTwo {
         return oneRule;
     }
 
-    public static ArrayList<ArrayList<Integer>> getSetCases(ArrayList<TheInfo> rules){
-        ArrayList<ArrayList<Integer>> answer = new ArrayList<ArrayList<Integer>>();
+    public static ArrayList<ArrayList<Integer>> getSetCases(final ArrayList<TheInfo> rules){
+        final ArrayList<ArrayList<Integer>> answer = new ArrayList<ArrayList<Integer>>();
         for(int i=0; i<rules.size(); i++){
             answer.add(rules.get(i).getCases());
         }
         return answer;
     }
 
-    public static ArrayList<Integer> getNewGoal(ArrayList<Integer> oldGoal, ArrayList<Integer> covered, boolean intersection){
-        ArrayList<Integer> hold = new ArrayList<>();
+    public static ArrayList<Integer> getNewGoal(final ArrayList<Integer> oldGoal, final ArrayList<Integer> covered, final boolean intersection){
+        final ArrayList<Integer> hold = new ArrayList<>();
         for(int i=0; i<oldGoal.size(); i++){
             hold.add(oldGoal.get(i));
         }
@@ -226,8 +356,8 @@ public class LemTwo {
         return hold;
     }
 
-    public static ArrayList<TheInfo> getOneRule(ArrayList<Integer> goal, ArrayList<Integer> holdGoal, ArrayList<TheInfo> ongoingList, 
-                                                    ArrayList<TheInfo> ruleCond){
+    public static ArrayList<TheInfo> getOneRule(final ArrayList<Integer> goal, final ArrayList<Integer> holdGoal, final ArrayList<TheInfo> ongoingList, 
+                                                    final ArrayList<TheInfo> ruleCond){
         
 
         System.out.println("GOAL: " + goal);                                                
@@ -238,7 +368,7 @@ public class LemTwo {
         pick = getPick(goal, ongoingList);
         System.out.print("Pick: ");
         pick.print();
-        ArrayList<Integer> casesCovered = pick.getCases();
+        final ArrayList<Integer> casesCovered = pick.getCases();
         ruleCond.add(pick);
 
         for(int i=0; i<ongoingList.size(); i++){
@@ -248,7 +378,7 @@ public class LemTwo {
             }
         }
 
-        ArrayList<ArrayList<Integer>> hold = getSetCases(ruleCond);
+        final ArrayList<ArrayList<Integer>> hold = getSetCases(ruleCond);
         System.out.println("OverlappingCases: " + overlappingCases(hold));
         if(isContained(holdGoal, overlappingCases(hold))){
             return ruleCond;
@@ -258,12 +388,12 @@ public class LemTwo {
         return(getOneRule(getNewGoal(goal, casesCovered, true), holdGoal, ongoingList, ruleCond));
     }
 
-    public static ArrayList<Integer> overlappingCases(ArrayList<ArrayList<Integer>> ruleSet) {
+    public static ArrayList<Integer> overlappingCases(final ArrayList<ArrayList<Integer>> ruleSet) {
 
-        ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
+        final ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
         
         for(int i=0; i<ruleSet.size(); i++){
-            ArrayList<Integer> holdInside = new ArrayList<Integer>();
+            final ArrayList<Integer> holdInside = new ArrayList<Integer>();
             for(int j=0; j<ruleSet.get(i).size(); j++){
                 holdInside.add(ruleSet.get(i).get(j));
             }
@@ -276,8 +406,8 @@ public class LemTwo {
         if(holdIt.size() == 1){
             return holdIt.get(0);
         } else {
-            ArrayList<Integer> hold1 = holdIt.get(0);
-            ArrayList<Integer> hold2 = holdIt.get(1);
+            final ArrayList<Integer> hold1 = holdIt.get(0);
+            final ArrayList<Integer> hold2 = holdIt.get(1);
             hold1.retainAll(hold2);
             holdIt.remove(1);
             holdIt.set(0, hold1);
@@ -285,7 +415,7 @@ public class LemTwo {
         }
     }
 
-    public static Boolean isContained(ArrayList<Integer> goal, ArrayList<Integer> overCases){
+    public static Boolean isContained(final ArrayList<Integer> goal, final ArrayList<Integer> overCases){
         for(int i=0; i<overCases.size(); i++){
             if(!goal.contains(overCases.get(i))){
                 return false;
@@ -294,13 +424,13 @@ public class LemTwo {
         return true;
     }
 
-    public static TheInfo getPick(ArrayList<Integer> goal, ArrayList<TheInfo> checkList){
-        Map<Integer, ArrayList<Integer>> overCases = new HashMap<>();
+    public static TheInfo getPick(final ArrayList<Integer> goal, final ArrayList<TheInfo> checkList){
+        final Map<Integer, ArrayList<Integer>> overCases = new HashMap<>();
         //object#, #overcases
-        Map<Integer, Integer> check1 = new HashMap<>();
-        Map<Integer, Integer> check2 = new HashMap<>();
+        final Map<Integer, Integer> check1 = new HashMap<>();
+        final Map<Integer, Integer> check2 = new HashMap<>();
         checkList.forEach((obj) -> {
-            ArrayList<Integer> hold = obj.overlappingCases(goal);
+            final ArrayList<Integer> hold = obj.overlappingCases(goal);
             // System.out.println("HOLD: " + hold);
             overCases.put(num, hold);
             check1.put(num, hold.size());
@@ -309,7 +439,7 @@ public class LemTwo {
         num = 0;
 
 
-        Map<Integer, Integer> sorted1 = check1
+        final Map<Integer, Integer> sorted1 = check1
             .entrySet()
             .stream()
             .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
@@ -319,11 +449,11 @@ public class LemTwo {
         
         // System.out.println(sorted1);
 
-        Integer firstKey = sorted1.keySet().iterator().next();
-        Integer firstValue = sorted1.get(firstKey);
+        final Integer firstKey = sorted1.keySet().iterator().next();
+        final Integer firstValue = sorted1.get(firstKey);
         sorted1.remove(firstKey);
 
-        Integer secondKey = sorted1.keySet().iterator().next();
+        final Integer secondKey = sorted1.keySet().iterator().next();
 
         if(firstValue != check1.get(secondKey)){
             return(checkList.get(firstKey));
@@ -337,11 +467,11 @@ public class LemTwo {
 
             while(sorted1.values().iterator().hasNext() && sorted1.values().iterator().next() == firstValue){
                 // System.out.println("HERE");
-                int hold = sorted1.keySet().iterator().next();
+                final int hold = sorted1.keySet().iterator().next();
                 check2.put(hold, checkList.get(hold).getNumCases());
                 sorted1.remove(hold);
             }
-            Map<Integer, Integer> sorted2 = check2.entrySet().stream()
+            final Map<Integer, Integer> sorted2 = check2.entrySet().stream()
                     .sorted(comparingByValue())
                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
             
