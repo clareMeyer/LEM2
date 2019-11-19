@@ -32,10 +32,15 @@ public class LemTwo {
     public static void main(final String[] args) throws IOException {
 
         Scanner getInfo = new Scanner(System.in);
+        String fileName = " ";
 
-        System.out.print("Enter file name: ");
-        String fileName = getInfo.nextLine();
-        System.out.println("The fileName: " + fileName);
+        while(!Files.isReadable(Paths.get(fileName))){
+          if(fileName != " "){
+            System.out.println("ENTER VALID NAME");
+          }
+          System.out.print("Enter file name: ");
+          fileName = getInfo.nextLine();
+        }
 
         System.out.print("Enter rule file name: ");
         outputFileName = getInfo.nextLine();
@@ -228,6 +233,13 @@ public class LemTwo {
         });
 
         final ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
+
+        ////////////////////////////////////////////////////////////////
+        ////////////////////PRINTING TO OUTPUT FILE////////////////////
+        ///////////////////////////////////////////////////////////////
+        PrintStream out = new PrintStream(new File(outputFileName));
+        System.setOut(out);
+
             answer.forEach((ruleSet) -> {
               ArrayList<Integer> holdNums = getThreeNums(ruleSet);
               System.out.println(holdNums.get(0) + ", " + holdNums.get(1) + ", " + holdNums.get(2));
@@ -246,6 +258,11 @@ public class LemTwo {
                 System.out.println("-> (" + holdDec.getAtt() + ", " + holdDec.getVal() + ") " + holdCases);
             });
             System.out.print("\n");
+
+        out.close();
+        ////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////
     }
     //first number is the number of conditions in the rule
     //second number is the number of cases the rule set covers (overlapping size)
