@@ -66,7 +66,6 @@ public class LemTwo {
         contentArr = Arrays.copyOfRange(contentArr, count, contentArr.length);
 
 
-        final Map<String, ArrayList<Double>> attValList = new HashMap<>();
         final int holdCount = count;
         final Map<String, String> types = new HashMap<>();
         for(int i=0; i<numAttributes; i++){
@@ -101,14 +100,83 @@ public class LemTwo {
         }
 
         ArrayList<ArrayList<String>> pleaseWork = getCutValues(valsList);
-        System.out.print(pleaseWork);
+        // System.out.print(pleaseWork);
+
+        
+        Map<ArrayList<String>, ArrayList<Integer>> attValList = new HashMap<>();
+        for(int i=0; i<pleaseWork.size(); i++){
+            for(int j=0; j<pleaseWork.get(i).size(); j++){
+                ArrayList<String> hold = new ArrayList<String>();
+                ArrayList<Integer> hold2 = new ArrayList<Integer>();
+                hold.add(attributes.get(i));
+                hold.add(pleaseWork.get(i).get(j));
+
+                attValList.put(hold, hold2);
+            }
+        }
+
+
+        List<List<Double>> cuts = getJustCuts(valsList);
+
+        ArrayList<ArrayList<ArrayList<Integer>>> all = new ArrayList<ArrayList<ArrayList<Integer>>>();
+        for(int i=0; i<numAttributes; i++){
+            int numCuts = pleaseWork.get(i).size();
+
+
+            ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
+            for(int e=0; e<numCuts; e++){
+                ArrayList<Integer> a = new ArrayList<Integer>();
+                a.add(0);
+                holdIt.add(a);
+            }
+
+            for(int j=0; j<numCases; j++){
+                int real = i + (j * (numAttributes + 1));
+                for(int c=0; c<numCuts/2; c++){
+                    // System.out.println("C: " + c + " " + cuts.get(i).get(c));
+                    if(Double.valueOf(contentArr[real]) <= cuts.get(i).get(c)){
+                        ArrayList<Integer> hold = new ArrayList<>();
+                        hold = holdIt.get(c * 2);
+                        hold.add(j+1);
+                        holdIt.set(c * 2, hold);
+                    } 
+                }
+            }
+
+            System.out.println(holdIt);
+            for(int h=1; h<numCuts; h=h+2){
+                ArrayList<Integer> holdAgain = new ArrayList<>();
+                ArrayList<Integer> allNums = new ArrayList<>();
+                for(int p=1; p<=numCases; p++){
+                    allNums.add(p);
+                }
+
+                holdAgain = holdIt.get(h-1);
+                holdAgain.remove(0);
+
+                allNums.removeAll(holdAgain);
+
+                // System.out.println("H: " + h);
+                holdIt.set(h, allNums);
+            }
+            all.add(holdIt);
+        }
+
+        System.out.println("THIS: ");
+        System.out.println(all);
+
+        
+
+
         //put these in the basemap so we can map the cases to it
         for(int i=0; i<pleaseWork.size(); i++){
             for(int j=0; j<pleaseWork.get(i).size(); j++){
                 ArrayList<Integer> cases = new ArrayList<Integer>();
                 ArrayList<String> attVal = new ArrayList<String>();
-                attVal.add(attributes.get(j));
+                attVal.add(attributes.get(i));
                 attVal.add(pleaseWork.get(i).get(j));
+
+                cases = all.get(i).get(j);
                 baseMap.put(attVal, cases);
             }
         }
@@ -227,6 +295,27 @@ public class LemTwo {
                 });
             });
             System.out.print("\n");
+    }
+
+    public static List<List<Double>> getJustCuts(List<List<Double>> lists){
+        List<List<Double>> holdCuts = new ArrayList<List<Double>>();
+        for (int i = 0; i < lists.size(); i++) {
+            // for(int j=0; j<lists.get(i).size(); i++){
+
+            for (int k = 0; k < lists.get(i).size() - 1; k++) {
+                List<Double> holdIt = new ArrayList<>();
+                for (int p = k + 1; p < lists.get(i).size(); p++) {
+                    Double num1 = lists.get(i).get(k);
+                    Double num2 = lists.get(i).get(p);
+
+                    Double cut = (num1 + num2) / 2;
+                    holdIt.add(cut);
+                    k = k + 1;
+                }
+                holdCuts.add(holdIt);
+            }
+        }
+        return holdCuts;
     }
 
     public static ArrayList<ArrayList<String>> getCutValues(List<List<Double>> lists){
