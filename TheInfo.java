@@ -11,7 +11,7 @@ public class TheInfo {
     String m_val;
     ArrayList<Integer> m_cases;
 
-    TheInfo(){
+    TheInfo() {
 
     }
 
@@ -22,42 +22,52 @@ public class TheInfo {
         numCases = cases.size();
     }
 
-    public void setInfo(String attribute, String value, ArrayList<Integer> cases){
+    public void setInfo(String attribute, String value, ArrayList<Integer> cases) {
         m_att = attribute;
         m_val = value;
         m_cases = cases;
         numCases = cases.size();
     }
 
-    public String getAtt(){
+    public String getAtt() {
         return m_att;
     }
 
-    public String getVal(){
+    public String getVal() {
         return m_val;
     }
 
-    public ArrayList<Integer> getCases(){
+    public ArrayList<Integer> getCases() {
         return m_cases;
     }
 
-    public int getNumCases(){
+    public int getNumCases() {
         return numCases;
     }
 
-    public ArrayList<Integer> overlappingCases(ArrayList<Integer> goal){
+    public ArrayList<Integer> overlappingCases(ArrayList<Integer> goal) {
         ArrayList<Integer> aMatch = new ArrayList<>();
-        for(int i=0; i<m_cases.size(); i++){
+        for (int i = 0; i < m_cases.size(); i++) {
             int hold = m_cases.get(i);
-            if(goal.contains(hold)){
+            if (goal.contains(hold)) {
                 aMatch.add(hold);
             }
         }
         return aMatch;
     }
 
-    public void print(){
+    public void print() {
         System.out.print(m_att + ", " + m_val + ", " + m_cases + "\n");
     }
-    
+
+    public Object clone() {
+        TheInfo aClone = new TheInfo();
+        try {
+            aClone = (TheInfo) super.clone();
+        } catch (CloneNotSupportedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return aClone;
+    }
 }

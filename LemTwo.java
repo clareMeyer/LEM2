@@ -22,6 +22,10 @@ public class LemTwo {
     static int num = 0;
     static TheInfo pick;
 
+    static ArrayList<TheInfo> ruleConditions = new ArrayList<>();
+    static ArrayList<ArrayList<Integer>> ruleCases = new ArrayList<ArrayList<Integer>>();
+    static ArrayList<Integer> casesCovered = new ArrayList<Integer>();
+
     public static void main(String[] args) throws IOException {
 
         Scanner getInfo = new Scanner(System.in);
@@ -112,47 +116,73 @@ public class LemTwo {
             System.out.print("\n");
         }
 
-
-
-        Map<TheInfo, ArrayList<ArrayList<TheInfo>>> answer = getRuleSet();
-        answer.forEach((decision, rules) -> {
-            decision.print();
-            System.out.println("*******************************");
-            rules.forEach((ruleSet) -> {
-                System.out.println("Rule: " + overlappingCases(getSetCases(ruleSet)) + ":");
+ 
+        ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
+            answer.forEach((ruleSet) -> {
+                System.out.println("Rule: " + overlappingCases(getSetCases(ruleSet)) + ":") ;
+                System.out.println("*******************************");
                 ruleSet.forEach((rule) -> {
                     rule.print();
                 });
             });
             System.out.print("\n");
-        });
+    }
+    public static ArrayList<TheInfo> deepCopy(ArrayList<TheInfo> toCopy){
+        ArrayList<TheInfo> clone = new ArrayList<>();
+
+       for(int i=0; i<toCopy.size(); i++){
+            clone.add((TheInfo)toCopy.get(i).clone());
+        }
+
+        return clone;
     }
 
-    public static Map<TheInfo, ArrayList<ArrayList<TheInfo>>> getRuleSet(){
+    public static ArrayList<ArrayList<TheInfo>> getRuleSet(){
         //MAP OF DECISIONS NEEDS TO BE LIST INSTEAD OF THEINFO
-        
-        Map<TheInfo, ArrayList<ArrayList<TheInfo>>> completeRules = new HashMap<TheInfo, ArrayList<ArrayList<TheInfo>>>();
+        ArrayList<ArrayList<TheInfo>> allRules = new ArrayList<ArrayList<TheInfo>>();
         //for each decision 
         for(int d=0; d<decisionsList.size(); d++){
+            decisionsList.get(d).print();
             ArrayList<Integer> dCases = decisionsList.get(d).getCases();
             ArrayList<Integer> holdRule = new ArrayList<>();
-            ArrayList<Integer> changingRule = new ArrayList<>();
+            ArrayList<Integer> tempCases = new ArrayList<>();
             for(int i=0; i<dCases.size(); i++){
                 holdRule.add(dCases.get(i));
-                changingRule.add(dCases.get(i));
-            }
-     
-            ArrayList<ArrayList<TheInfo>> holdRules = new ArrayList<ArrayList<TheInfo>>();
-            System.out.println("GETTING RULE: " + dCases);
-            System.out.println("--------------------------------------");
-            holdRules = getRule(changingRule, holdRule, theList, holdRules, 0);
-            for(int i=0; i<holdRules.size(); i++){
-                holdRules.set(i, checkForDrop(holdRule, holdRules.get(i), 0));
+                tempCases.add(dCases.get(i));
             }
 
-            completeRules.put(decisionsList.get(d), holdRules);
+            ArrayList<TheInfo> holdList = new ArrayList<TheInfo>();
+            for(int i=0; i<theList.size(); i++){
+                holdList.add(theList.get(i));
+            }
+     
+            ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
+
+            while(tempCases.size()!=0){
+                ArrayList<TheInfo> aRule = getOneRule(tempCases, holdRule, holdList, holdARule);
+
+                // System.out.println(tempCases);
+                // aRule.get(0).print();
+
+                aRule = checkForDrop(holdRule, aRule, 0);
+
+                allRules.add(new ArrayList<TheInfo>(aRule));
+
+                ArrayList<ArrayList<Integer>> holdSet = getSetCases(aRule);
+                ArrayList<Integer> covered = overlappingCases(holdSet);
+                tempCases = getNewGoal(tempCases, covered, false);
+                holdList = new ArrayList<TheInfo>();
+                for (int i = 0; i < theList.size(); i++) {
+                    holdList.add(theList.get(i));
+                }
+
+                holdARule.clear();
+                aRule.clear();
+            }
+
+            // completeRules.put(decisionsList.get(d), allRules);
         }
-        return completeRules;
+        return allRules;
     }
 
     //goal, the rule, the condition youre trying to drop
@@ -179,98 +209,83 @@ public class LemTwo {
         return answer;
     }
 
-    public static ArrayList<Integer> getNewGoal(ArrayList<Integer> oldGoal, ArrayList<Integer> covered, boolean contained){
-        if(contained == true){
+    public static ArrayList<Integer> getNewGoal(ArrayList<Integer> oldGoal, ArrayList<Integer> covered, boolean intersection){
+        ArrayList<Integer> hold = new ArrayList<>();
+        for(int i=0; i<oldGoal.size(); i++){
+            hold.add(oldGoal.get(i));
+        }
+
+        if(intersection == false){
             for (int i = 0; i < covered.size(); i++) {
-                oldGoal.remove(covered.get(i));
+                hold.remove(covered.get(i));
             }
         }
         else {
-            oldGoal.retainAll(covered);
+            hold.retainAll(covered);
         }
-        return oldGoal;
+        return hold;
     }
 
-    //gets one rule for the given goal, this will be run with smaller and smaller goal
-    public static ArrayList<ArrayList<TheInfo>> getRule(ArrayList<Integer> changingGoal, ArrayList<Integer> holdGoal, ArrayList<TheInfo> ongoingList,
-                                                ArrayList<ArrayList<TheInfo>> ruleSet, int ruleNum){
+    public static ArrayList<TheInfo> getOneRule(ArrayList<Integer> goal, ArrayList<Integer> holdGoal, ArrayList<TheInfo> ongoingList, 
+                                                    ArrayList<TheInfo> ruleCond){
         
-        // for(int i=0; i<ruleSet.size(); i++){
-        //     for(int j=0; j<ruleSet.get(i).size(); j++){
-        //         ruleSet.get(i).get(j).print();
-        //     }
-        // }
-        ArrayList<TheInfo> ruleConditions = new ArrayList<>();
-        ArrayList<ArrayList<Integer>> ruleCases = new ArrayList<ArrayList<Integer>>();
-        ArrayList<Integer> casesCovered = new ArrayList<Integer>();
 
-        if(changingGoal.size() == 0){
-            return ruleSet;
+        System.out.println("GOAL: " + goal);                                                
+        if(goal.size() == 0){
+            return ruleCond;
+        }             
+                                           
+        pick = getPick(goal, ongoingList);
+        System.out.print("Pick: ");
+        pick.print();
+        ArrayList<Integer> casesCovered = pick.getCases();
+        ruleCond.add(pick);
+
+        for(int i=0; i<ongoingList.size(); i++){
+            if(ongoingList.get(i).getAtt() == pick.getAtt() && ongoingList.get(i).getVal() == pick.getVal()){
+                ongoingList.remove(i);
+                break;
+            }
         }
 
-        if(ruleSet.size() > ruleNum){
-            ruleConditions = ruleSet.get(ruleNum);
-            ruleCases = getSetCases(ruleConditions);
-            casesCovered = overlappingCases(ruleCases);
+        ArrayList<ArrayList<Integer>> hold = getSetCases(ruleCond);
+        System.out.println("OverlappingCases: " + overlappingCases(hold));
+        if(isContained(holdGoal, overlappingCases(hold))){
+            return ruleCond;
+        }
 
-            if (isContained(holdGoal, casesCovered)) {
-                ArrayList<Integer> newGoal = getNewGoal(changingGoal, casesCovered, true);
-                return getRule(newGoal, holdGoal, ongoingList, ruleSet, ruleNum+1);
-            } 
-            //not contained
-            else {
-                ArrayList<Integer> newGoal = getNewGoal(changingGoal, casesCovered, false);
-                ArrayList<Integer> restGoal = getNewGoal(newGoal, changingGoal, true);
-                ArrayList<TheInfo> hold1 = getRule(newGoal, holdGoal, ongoingList, ruleSet, ruleNum).get(ruleNum);
-                ArrayList<TheInfo> hold2 = getRule(restGoal, holdGoal, ongoingList, ruleSet, ruleNum).get(ruleNum);
-
-            }
-        } 
-
-        // do {
-            pick = getPick(changingGoal, ongoingList);
-            
-            System.out.print("pick: ");
-            pick.print();
-
-            ruleConditions.add(pick);
-            ruleCases.add(pick.getCases());
-
-            casesCovered = overlappingCases(ruleCases);
-
-            System.out.println("casesCovered: " + casesCovered);
-
-            for(int i=0; i<ongoingList.size(); i++){
-                if(ongoingList.get(i).getAtt() == pick.getAtt() && ongoingList.get(i).getVal() == pick.getVal()){
-                    ongoingList.remove(i);
-                    break;
-                }
-            }         
-        // } while (!isContained(holdGoal, casesCovered));
-
-        System.out.println("DONE");
-        ruleSet.add(ruleConditions);
-        return getRule(changingGoal, holdGoal, ongoingList, ruleSet, ruleNum);
+        System.out.println("THISITHSIHT:SIHTISHTISHTISTHISTH");
+        return(getOneRule(getNewGoal(goal, casesCovered, true), holdGoal, ongoingList, ruleCond));
     }
 
     public static ArrayList<Integer> overlappingCases(ArrayList<ArrayList<Integer>> ruleSet) {
-        if(ruleSet.size() == 0){
+
+        ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
+        
+        for(int i=0; i<ruleSet.size(); i++){
+            ArrayList<Integer> holdInside = new ArrayList<Integer>();
+            for(int j=0; j<ruleSet.get(i).size(); j++){
+                holdInside.add(ruleSet.get(i).get(j));
+            }
+            holdIt.add(holdInside);
+        }
+
+        if(holdIt.size() == 0){
             return null;
         }
-        if(ruleSet.size() == 1){
-            return ruleSet.get(0);
+        if(holdIt.size() == 1){
+            return holdIt.get(0);
         } else {
-            ArrayList<Integer> hold1 = ruleSet.get(0);
-            ArrayList<Integer> hold2 = ruleSet.get(1);
+            ArrayList<Integer> hold1 = holdIt.get(0);
+            ArrayList<Integer> hold2 = holdIt.get(1);
             hold1.retainAll(hold2);
-            ruleSet.remove(1);
-            ruleSet.set(0, hold1);
-            return(overlappingCases(ruleSet));
+            holdIt.remove(1);
+            holdIt.set(0, hold1);
+            return(overlappingCases(holdIt));
         }
     }
 
     public static Boolean isContained(ArrayList<Integer> goal, ArrayList<Integer> overCases){
-        if(overCases.size()==0) return false;
         for(int i=0; i<overCases.size(); i++){
             if(!goal.contains(overCases.get(i))){
                 return false;
@@ -280,10 +295,6 @@ public class LemTwo {
     }
 
     public static TheInfo getPick(ArrayList<Integer> goal, ArrayList<TheInfo> checkList){
-        // for(int i=0; i<checkList.size(); i++){
-        //     checkList.get(i).print();
-        // }
-        // System.out.println("GOAL: " + goal);
         Map<Integer, ArrayList<Integer>> overCases = new HashMap<>();
         //object#, #overcases
         Map<Integer, Integer> check1 = new HashMap<>();
@@ -306,6 +317,8 @@ public class LemTwo {
                 toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)
             );
         
+        // System.out.println(sorted1);
+
         Integer firstKey = sorted1.keySet().iterator().next();
         Integer firstValue = sorted1.get(firstKey);
         sorted1.remove(firstKey);
