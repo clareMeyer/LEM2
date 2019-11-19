@@ -1,5 +1,4 @@
 import java.util.*;
-import java.lang.*;
 
 import java.io.*;
 import java.nio.file.*;
@@ -36,6 +35,9 @@ public class LemTwo {
         getInfo.close();
 
         int numAttributes = 0;
+        // int numSymbolAttributes = 0;
+        int numNumAttributes = 0;
+
         final String delim = "[\\n\\t ]";
 
         final String content = Files.readString(Paths.get(fileName));
@@ -66,13 +68,15 @@ public class LemTwo {
         contentArr = Arrays.copyOfRange(contentArr, count, contentArr.length);
 
 
-        final int holdCount = count;
+        // final int holdCount = count;
         final Map<String, String> types = new HashMap<>();
         for(int i=0; i<numAttributes; i++){
             if(contentArr[count].matches("[+-]?\\d*(\\.\\d+)?")){
                 types.put(attributes.get(i), "number");
+                numNumAttributes ++;
             } else {
                 types.put(attributes.get(i), "string");
+                // numSymbolAttributes ++;
             }
             count++;
         }
@@ -117,9 +121,12 @@ public class LemTwo {
 
 
         List<List<Double>> cuts = getJustCuts(valsList);
+        // System.out.println("PLEASE WORK: " + pleaseWork);
 
         ArrayList<ArrayList<ArrayList<Integer>>> all = new ArrayList<ArrayList<ArrayList<Integer>>>();
-        for(int i=0; i<numAttributes; i++){
+        // for(int i=0; i<numAttributes; i++){
+        for(int i=0; i<numNumAttributes; i++){
+            // System.out.println("NUM CUTS: " + pleaseWork.get(i));
             int numCuts = pleaseWork.get(i).size();
 
 
@@ -143,7 +150,7 @@ public class LemTwo {
                 }
             }
 
-            System.out.println(holdIt);
+            // System.out.println(holdIt);
             for(int h=1; h<numCuts; h=h+2){
                 ArrayList<Integer> holdAgain = new ArrayList<>();
                 ArrayList<Integer> allNums = new ArrayList<>();
@@ -162,8 +169,8 @@ public class LemTwo {
             all.add(holdIt);
         }
 
-        System.out.println("THIS: ");
-        System.out.println(all);
+        // System.out.println("THIS: ");
+        // System.out.println(all);
 
         
 
@@ -234,7 +241,7 @@ public class LemTwo {
             }
         }
 
-        System.out.println("valsList: " + valsList);
+        // System.out.println("valsList: " + valsList);
 
         baseMap.forEach((attributeVal, cases) -> {
             theList.add(new TheInfo(attributeVal.get(0), attributeVal.get(1), cases));
@@ -272,7 +279,7 @@ public class LemTwo {
         // }
         // });
 
-        System.out.println("NUMERICAL LIST: " + attValList);
+        // System.out.println("NUMERICAL LIST: " + attValList);
 
 
 
@@ -280,10 +287,10 @@ public class LemTwo {
             decisionsList.add(new TheInfo("decision", attributeVal, cases));
         });
 
-        for(int i=0; i<theList.size(); i++){
-            theList.get(i).print();
-            System.out.print("\n");
-        }
+        // for(int i=0; i<theList.size(); i++){
+        //     theList.get(i).print();
+        //     System.out.print("\n");
+        // }
 
  
         final ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
@@ -352,7 +359,7 @@ public class LemTwo {
             }
             cuts.add(forAtt);
         }
-        System.out.println("HOLDCUTS: " + holdCuts);
+        // System.out.println("HOLDCUTS: " + holdCuts);
         return cuts;
     }
 
@@ -459,14 +466,14 @@ public class LemTwo {
                                                     final ArrayList<TheInfo> ruleCond){
         
 
-        System.out.println("GOAL: " + goal);                                                
+        // System.out.println("GOAL: " + goal);                                                
         if(goal.size() == 0){
             return ruleCond;
         }             
                                            
         pick = getPick(goal, ongoingList);
-        System.out.print("Pick: ");
-        pick.print();
+        // System.out.print("Pick: ");
+        // pick.print();
         final ArrayList<Integer> casesCovered = pick.getCases();
         ruleCond.add(pick);
 
@@ -478,12 +485,12 @@ public class LemTwo {
         }
 
         final ArrayList<ArrayList<Integer>> hold = getSetCases(ruleCond);
-        System.out.println("OverlappingCases: " + overlappingCases(hold));
+        // System.out.println("OverlappingCases: " + overlappingCases(hold));
         if(isContained(holdGoal, overlappingCases(hold))){
             return ruleCond;
         }
 
-        System.out.println("THISITHSIHT:SIHTISHTISHTISTHISTH");
+        // System.out.println("THISITHSIHT:SIHTISHTISHTISTHISTH");
         return(getOneRule(getNewGoal(goal, casesCovered, true), holdGoal, ongoingList, ruleCond));
     }
 
@@ -536,6 +543,9 @@ public class LemTwo {
             num++;
         });
         num = 0;
+
+        // System.out.println("CHEKC THIS LIST: ");
+        // System.out.println(checkList);
 
 
         final Map<Integer, Integer> sorted1 = check1
