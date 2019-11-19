@@ -9,17 +9,12 @@ public class LemTwo {
 
     String attVal[] = new String[2];
     //Map<[attribute, value], {cases}>
-    static Map<ArrayList<String>, ArrayList<Integer>> baseMap= new HashMap<>();
     static List<TheInfo> theList = new ArrayList<TheInfo>();
     //Map<decision, {cases}>
-    // static Map<String, ArrayList<Integer>> decisions = new HashMap<>();
-    // static List<TheInfo> decList2 = new ArrayList<TheInfo>();
     static List<TheInfo> decisionsList = new ArrayList<>();
 
     static List<String> attributes = new ArrayList<>();
     static String decisionName;
-
-    // static ArrayList<TheInfo> theList = new ArrayList<TheInfo>();
 
     static int num = 0;
     static TheInfo pick;
@@ -182,47 +177,12 @@ public class LemTwo {
                   newOne.setCases(all.get(i).get(j));
 
                   theList.add(newOne);
-
-                  // ArrayList<String> atVal = new ArrayList<String>();
-                  // ArrayList<Integer> cases = new ArrayList<Integer>();
-                  // atVal.add(attributes.get(i));
-                  // atVal.add(pleaseWork.get(i).get(j));
-                  //
-                  // cases = all.get(i).get(j);
-                  // baseMap.put(atVal, cases);
               }
           }
         }
 /////////END OF FOR CUTS////////////////////////////////////////
         //for each case
         for(int i=0; i<numCases; i++){
-            //for each attribute in that case
-            // for(int j=0; j<numAttributes; j++){
-            //     final int real = j + (i*(numAttributes+1));
-            //     //only need to do this for the symbol attributes beacause already took care
-            //     // of the numerical ones
-            //     if(types.get(attributes.get(j)) == "string"){
-            //         //hold = {attribute, value}
-            //         ArrayList<String> hold = new ArrayList<>();
-            //         hold.add(attributes.get(j));
-            //         hold.add(contentArr[real]);
-            //
-            //         //if the attribute, value pair is already in the map, just add the case
-            //         //to the cases that are already in there
-            //         if (baseMap.containsKey(hold)) {
-            //             final ArrayList<Integer> hold2 = baseMap.get(hold);
-            //             hold2.add(i + 1);
-            //             baseMap.put(hold, hold2);
-            //         //otherwise you are going to add it to the list and put in a new case list
-            //         } else {
-            //             final ArrayList<Integer> hold2 = new ArrayList<>();
-            //             hold2.add(i + 1);
-            //             baseMap.put(hold, hold2);
-            //         }
-            //     }
-            // }
-
-
             for(int j=0; j<numAttributes; j++){
                 final int real = j + (i*(numAttributes+1));
                 //only need to do this for the symbol attributes beacause already took care
@@ -271,35 +231,14 @@ public class LemTwo {
                 holdDec.setCases(holdCases);
                 decisionsList.add(holdDec);
             }
-            // if (decisions.containsKey(contentArr[dec])) {
-            //     final ArrayList<Integer> holdCases = decisions.get(contentArr[dec]);
-            //     holdCases.add(i+1);
-            //     decisions.put(contentArr[dec], holdCases);
-            // } else {
-            //     final ArrayList<Integer> holdCases = new ArrayList<>();
-            //     holdCases.add(i+1);
-            //     decisions.put(contentArr[dec], holdCases);
-            // }
         }
         //at this point all the attribute, value pairs and their cases are in baseMap
-
-        // baseMap.forEach((attributeVal, cases) -> {
-        //     theList.add(new TheInfo(attributeVal.get(0), attributeVal.get(1), cases));
-        // });
 
         Collections.sort(theList, new Comparator<TheInfo>() {
             public int compare(final TheInfo o1, final TheInfo o2) {
                 return o1.getAtt().compareToIgnoreCase(o2.getAtt());
             }
         });
-
-        for(int i=0; i<theList.size(); i++){
-            theList.get(i).print();
-            System.out.print("\n");
-        }
-        // decisions.forEach((attributeVal, cases) -> {
-        //     decisionsList.add(new TheInfo("decision", attributeVal, cases));
-        // });
 
         final ArrayList<ArrayList<TheInfo>> answer = getRuleSet();
 
