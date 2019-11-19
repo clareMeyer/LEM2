@@ -57,7 +57,7 @@ public class TheInfo {
     }
 
     public void print() {
-        System.out.print(m_att + ", " + m_val + ", " + m_cases + "\n");
+        System.out.print("(" + m_att + ", " + m_val + ")" );
     }
 
     public Object clone() {
