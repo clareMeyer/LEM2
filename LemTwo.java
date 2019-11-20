@@ -406,11 +406,12 @@ public class LemTwo {
             ArrayList<Integer> changingRule = dcListInt(holdRule);
             ArrayList<TheInfo> holdList = dcListInfo(theList);
 
-            final ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
+            ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
+            ArrayList<Integer> currentInter = new ArrayList<Integer>();
 
             while (changingRule.size() != 0) {
                 //get a rule
-                ArrayList<TheInfo> aRule = getOneRule(changingRule, holdRule, holdList, holdARule);
+                ArrayList<TheInfo> aRule = getOneRule(changingRule, holdRule, holdList, holdARule, currentInter);
                 //check if the rule can drop any conditions
                 aRule = checkForDrop(holdRule, aRule, 0);
                 //add this rule to the rule set
@@ -473,35 +474,51 @@ public class LemTwo {
         return oldGoalHold;
     }
 
-    public static ArrayList<TheInfo> getOneRule(final ArrayList<Integer> goal, final ArrayList<Integer> holdGoal,
-            final ArrayList<TheInfo> ongoingList, final ArrayList<TheInfo> ruleCond) {
+    //given a goal, a goal you can change, a list of options, current
+    //intersection of all the cases of the rule conditions and any conditions already added
+    //returns a rule
+    public static ArrayList<TheInfo> getOneRule(ArrayList<Integer> goal, ArrayList<Integer> holdGoal,
+            ArrayList<TheInfo> ongoingList, ArrayList<TheInfo> ruleCond, ArrayList<Integer> currentInter) {
 
         if (goal.size() == 0) {
             return ruleCond;
         }
-
+        //start by getting a rule condtions, then get just the cases for this condtion
+        //and add it to the list of conditions you have for this rule
         pick = getPick(goal, ongoingList);
-        final ArrayList<Integer> casesCovered = pick.getCases();
+        ArrayList<Integer> casesCovered = pick.getCases();
         ruleCond.add(pick);
+        currentInter = updateIntersection(currentInter, casesCovered);
 
+        if (isContained(holdGoal, currentInter)) {
+            return ruleCond;
+        }
+
+        //remove the condition you just added from the list of possible choices
+        //for the next condition
         for (int i = 0; i < ongoingList.size(); i++) {
             if (ongoingList.get(i).getAtt() == pick.getAtt() && ongoingList.get(i).getVal() == pick.getVal()) {
                 ongoingList.remove(i);
                 break;
             }
         }
+        
+        return (getOneRule(getNewGoal(goal, casesCovered, true), holdGoal, ongoingList, ruleCond, currentInter));
+    }
 
-        final ArrayList<ArrayList<Integer>> hold = getSetCases(ruleCond);
-        if (isContained(holdGoal, overlappingCases(hold))) {
-            return ruleCond;
+    public static ArrayList<Integer> updateIntersection(ArrayList<Integer> curr, ArrayList<Integer> adding){
+        if(curr.size() == 0){
+            return adding;
         }
-
-        return (getOneRule(getNewGoal(goal, casesCovered, true), holdGoal, ongoingList, ruleCond));
+        ArrayList<Integer> updated = dcListInt(adding);
+        ArrayList<Integer> current = dcListInt(curr);
+        updated.retainAll(current);
+        return updated;
     }
 
     public static ArrayList<Integer> overlappingCases(final ArrayList<ArrayList<Integer>> ruleSet) {
 
-        final ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
+        ArrayList<ArrayList<Integer>> holdIt = new ArrayList<ArrayList<Integer>>();
 
         for (int i = 0; i < ruleSet.size(); i++) {
             final ArrayList<Integer> holdInside = new ArrayList<Integer>();
