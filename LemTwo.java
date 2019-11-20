@@ -400,38 +400,29 @@ public class LemTwo {
         // for each decision, so this is getting the rules per decision
         for (int d = 0; d < decisionsList.size(); d++) {
             //holds the cases for each decision, these are the goals
+            //chaning rule will change so its a deepCopy
+            //holdlist will also change therefore is a deepcopy of the list
             ArrayList<Integer> holdRule = (dcListInt(decisionsList.get(d).getCases()));
             ArrayList<Integer> changingRule = dcListInt(holdRule);
-            // ArrayList<Integer> dCases = decisionsList.get(d).getCases();
-            // ArrayList<Integer> holdRule = new ArrayList<>();
-            // ArrayList<Integer> tempCases = new ArrayList<>();
-            // for (int i = 0; i < dCases.size(); i++) {
-            //     holdRule.add(dCases.get(i));
-            //     tempCases.add(dCases.get(i));
-            // }
-
             ArrayList<TheInfo> holdList = dcListInfo(theList);
-            // ArrayList<TheInfo> holdList = new ArrayList<TheInfo>();
-            // for (int i = 0; i < theList.size(); i++) {
-            //     holdList.add(theList.get(i));
-            // }
 
             final ArrayList<TheInfo> holdARule = new ArrayList<TheInfo>();
 
             while (changingRule.size() != 0) {
+                //get a rule
                 ArrayList<TheInfo> aRule = getOneRule(changingRule, holdRule, holdList, holdARule);
-
+                //check if the rule can drop any conditions
                 aRule = checkForDrop(holdRule, aRule, 0);
-
+                //add this rule to the rule set
                 allRules.add(new ArrayList<TheInfo>(aRule));
 
+                //get the new goal after this rule was made
                 final ArrayList<ArrayList<Integer>> holdSet = getSetCases(aRule);
                 final ArrayList<Integer> covered = overlappingCases(holdSet);
                 changingRule = getNewGoal(changingRule, covered, false);
-                holdList = new ArrayList<TheInfo>();
-                for (int i = 0; i < theList.size(); i++) {
-                    holdList.add(theList.get(i));
-                }
+
+                //reset the list of options
+                holdList = dcListInfo(theList);
 
                 holdARule.clear();
                 aRule.clear();
@@ -458,6 +449,7 @@ public class LemTwo {
         return oneRule;
     }
 
+    //for a list of "theInfo's" return just the cases associated
     public static ArrayList<ArrayList<Integer>> getSetCases(final ArrayList<TheInfo> rules) {
         final ArrayList<ArrayList<Integer>> answer = new ArrayList<ArrayList<Integer>>();
         for (int i = 0; i < rules.size(); i++) {
@@ -466,21 +458,19 @@ public class LemTwo {
         return answer;
     }
 
+    //given an old goal compute the new goal
     public static ArrayList<Integer> getNewGoal(final ArrayList<Integer> oldGoal, final ArrayList<Integer> covered,
             final boolean intersection) {
-        final ArrayList<Integer> hold = new ArrayList<>();
-        for (int i = 0; i < oldGoal.size(); i++) {
-            hold.add(oldGoal.get(i));
-        }
+        ArrayList<Integer> oldGoalHold = dcListInt(oldGoal);
 
         if (intersection == false) {
             for (int i = 0; i < covered.size(); i++) {
-                hold.remove(covered.get(i));
+                oldGoalHold.remove(covered.get(i));
             }
         } else {
-            hold.retainAll(covered);
+            oldGoalHold.retainAll(covered);
         }
-        return hold;
+        return oldGoalHold;
     }
 
     public static ArrayList<TheInfo> getOneRule(final ArrayList<Integer> goal, final ArrayList<Integer> holdGoal,
