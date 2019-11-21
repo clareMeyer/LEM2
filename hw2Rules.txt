@@ -1,0 +1,9 @@
+2, 2, 2
+(feel, soft) & (color, yellow)-> (decision, positive) [1, 3]
+2, 1, 1
+(feel, hard) & (color, yellow)-> (decision, negative) [2]
+2, 1, 1
+(size, medium) & (temp, low)-> (decision, negative) [6]
+2, 4, 4
+(feel, hard) & (color, blue)-> (decision, so-so) [4, 5, 7, 8]
+

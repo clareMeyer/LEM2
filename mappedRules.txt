@@ -1,0 +1,9 @@
+2, 2, 2
+(inkColor, blue) & (bodyColor, blue)-> (decision, positive) [1, 6]
+1, 1, 1
+(inkColor, red)-> (decision, positive) [3]
+1, 3, 3
+(bodyColor, black)-> (decision, negative) [2, 7, 8]
+1, 3, 3
+(inkColor, black)-> (decision, negative) [4, 5, 7]
+
